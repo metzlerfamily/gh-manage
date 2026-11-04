@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-11-04T21:24:18.632Z",
+  "dry_run": false,
+  "results": [
+    {
+      "app": "ghm-demo-bot",
+      "slug": "ghm-demo-bot",
+      "org": "metzlerfamily",
+      "topic": "ghm-demo",
+      "mode": "enforce",
+      "installation_id": 178618435,
+      "status": "in-sync",
+      "current": [
+        "demo-alpha",
+        "demo-beta",
+        "demo-gamma"
+      ],
+      "desired": [
+        "demo-alpha",
+        "demo-beta",
+        "demo-gamma"
+      ],
+      "to_add": [],
+      "to_remove": []
+    }
+  ]
+}
