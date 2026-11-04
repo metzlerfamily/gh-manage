@@ -1,0 +1,12 @@
+# Managed by gh-manage. Edit through pull requests.
+name: ghm-another-app
+org: metzlerfamily
+requester: dmetzler
+purpose: asdf
+use_case: fdf
+permissions:
+  repository:
+    contents:
+      access: read
+      justification: because
+events: []
