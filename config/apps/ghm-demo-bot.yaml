@@ -12,6 +12,7 @@ permissions:
     issues:
       access: write
       justification: Open a welcome issue when a repository opts in.
+events: []
 enablement:
   topic: ghm-demo
   orgs:
@@ -20,3 +21,10 @@ enablement:
       removal_guard:
         max: 5
         max_percent: 100
+app:
+  id: 5613959
+  slug: ghm-demo-bot
+  client_id: Iv23limZIosi5sxNNsvv
+  html_url: https://github.com/apps/ghm-demo-bot
+  created_by: dmetzler
+  created_at: 2026-11-04T15:54:09.557Z
