@@ -99,27 +99,34 @@ function renderReport(report: RunReport): string {
 
 async function reconcile() {
   const args = process.argv.slice(3);
-  const dryRun = args.includes("--dry-run");
-  const overrideGuard = args.includes("--override-guard");
-  const onlyIdx = args.indexOf("--only");
-  const only = onlyIdx >= 0 ? args[onlyIdx + 1] : undefined;
-  const out = args.includes("--out") ? args[args.indexOf("--out") + 1] : undefined;
-  const allSecrets: Record<string, string> = process.env.GHM_PRIVATE_KEYS ? JSON.parse(process.env.GHM_PRIVATE_KEYS) : {};
-  delete process.env.GHM_PRIVATE_KEYS;
-  const keys = Object.fromEntries(Object.entries(allSecrets).filter(([k]) => /^GHM_[A-Z0-9_]+_PRIVATE_KEY$/.test(k)));
+  const flag = (name: string) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+  const app = flag("--app");
+  const out = flag("--out");
   const config = loadOrFail(process.cwd());
+  if (app && !config.apps[app]) throw new Error(`unknown app ${app}`);
+  const pem = process.env.GHM_APP_PRIVATE_KEY;
+  delete process.env.GHM_APP_PRIVATE_KEY;
   const report = await run(config, new OrgOwnerBackend(env("GHM_ADMIN_TOKEN")), {
-    dryRun,
-    overrideGuard,
-    only: only || undefined,
-    privateKey: (key) => keys[privateKeySecretName(key)],
+    dryRun: args.includes("--dry-run"),
+    overrideGuard: args.includes("--override-guard"),
+    app,
+    privateKey: (key) => (key === app ? pem || undefined : process.env[privateKeySecretName(key)] || undefined),
   });
   summary(renderReport(report));
   if (out) writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
   if (report.results.some((r) => FAILING.includes(r.status))) process.exit(1);
 }
 
-const commands: Record<string, () => unknown> = { validate, "check-pr": checkPr, reconcile };
+function managedApps() {
+  const config = loadOrFail(process.cwd());
+  const only = process.env.ONLY;
+  const apps = Object.entries(config.apps)
+    .filter(([key, s]) => s.enablement && (!only || key === only))
+    .map(([key]) => ({ key, secret: privateKeySecretName(key) }));
+  console.log(JSON.stringify(apps));
+}
+
+const commands: Record<string, () => unknown> = { validate, "check-pr": checkPr, reconcile, "managed-apps": managedApps };
 const command = commands[process.argv[2] ?? ""];
 if (!command) {
   console.error(`usage: ghm <${Object.keys(commands).join("|")}>`);

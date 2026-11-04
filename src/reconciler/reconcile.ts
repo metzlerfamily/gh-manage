@@ -47,7 +47,7 @@ export function guardViolation(guard: RemovalGuard, removals: number, current: n
 export interface RunOptions {
   dryRun: boolean;
   overrideGuard?: boolean;
-  only?: string;
+  app?: string;
   privateKey(appKey: string): string | undefined;
   now?: () => Date;
 }
@@ -112,9 +112,8 @@ async function reconcilePair(
 export async function run(config: Config, org: OrgBackend, opts: RunOptions): Promise<RunReport> {
   const results: PairResult[] = [];
   for (const [key, spec] of Object.entries(config.apps)) {
-    if (!spec.enablement) continue;
+    if (!spec.enablement || (opts.app && opts.app !== key)) continue;
     for (const target of spec.enablement.orgs) {
-      if (opts.only && opts.only !== `${key}@${target.name}`) continue;
       const base = { app: key, slug: spec.app?.slug, org: target.name, topic: spec.enablement.topic, mode: target.mode };
       const empty = { current: [], desired: [], to_add: [], to_remove: [] };
       if (!spec.app) {
