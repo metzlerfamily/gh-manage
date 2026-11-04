@@ -1,0 +1,34 @@
+# Who may approve what, and which organizations this repo manages.
+# Changing this file always needs a manager's approval.
+
+organizations:
+  - metzlerfamily
+
+# Org owners/CI engineers: approve requests that stay within the boundaries,
+# register apps, and record them.
+admins:
+  - dmetzler
+
+# Escalation approvers: required when a request crosses a boundary below.
+managers:
+  - dmetzler
+
+# A grant at or above these levels needs a manager. Repository grants are
+# handled by admins unless listed.
+escalate:
+  organization: read
+  account: read
+  repository:
+    administration: write
+    secrets: write
+    workflows: write
+
+# Lets an admin or manager satisfy the policy check on their own PR. Only for
+# single-maintainer demos; keep false in a real enterprise.
+allow_self_approval: true
+
+defaults:
+  mode: dry-run
+  removal_guard:
+    max: 10
+    max_percent: 20

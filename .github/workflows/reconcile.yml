@@ -1,0 +1,69 @@
+name: reconcile
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  push:
+    branches: [main]
+    paths: ["config/**"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Plan only, never write
+        type: boolean
+        default: false
+      only:
+        description: Restrict to one pair, e.g. repo-factory@metzlerfamily
+        type: string
+        default: ""
+      override_guard:
+        description: Bypass the removal circuit breaker
+        type: boolean
+        default: false
+
+concurrency:
+  group: reconcile
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    environment: enforce
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Reconcile
+        env:
+          GHM_ADMIN_TOKEN: ${{ secrets.GHM_ADMIN_TOKEN }}
+          GHM_PRIVATE_KEYS: ${{ toJSON(secrets) }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          ONLY: ${{ inputs.only }}
+          OVERRIDE_GUARD: ${{ inputs.override_guard }}
+        run: |
+          args=(--out status.json)
+          [ "$DRY_RUN" = true ] && args+=(--dry-run)
+          [ -n "$ONLY" ] && args+=(--only "$ONLY")
+          [ "$OVERRIDE_GUARD" = true ] && args+=(--override-guard)
+          npm run --silent ghm -- reconcile "${args[@]}"
+      - name: Publish status for the dashboard
+        if: always() && hashFiles('status.json') != ''
+        run: |
+          if git fetch -q origin status 2>/dev/null && \
+             [ "$(git show FETCH_HEAD:status.json | jq -S .results)" = "$(jq -S .results status.json)" ]; then
+            echo "status unchanged"; exit 0
+          fi
+          cp status.json "$RUNNER_TEMP/status.json"
+          git checkout -q --orphan status-new
+          git rm -rfq --cached .
+          cp "$RUNNER_TEMP/status.json" status.json
+          git add status.json
+          git -c user.name=gh-manage -c user.email=gh-manage@users.noreply.github.com commit -qm "status $(date -u +%FT%TZ)"
+          git push -qf origin status-new:status

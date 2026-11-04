@@ -1,0 +1,22 @@
+# Managed by gh-manage. Edit through pull requests.
+name: ghm-demo-bot
+org: metzlerfamily
+requester: dmetzler
+purpose: Demo app that proves topic-gated installation works end to end.
+use_case: GitHub Actions in repositories that opt in with the ghm-demo topic.
+permissions:
+  repository:
+    contents:
+      access: read
+      justification: Read repository files.
+    issues:
+      access: write
+      justification: Open a welcome issue when a repository opts in.
+enablement:
+  topic: ghm-demo
+  orgs:
+    - name: metzlerfamily
+      mode: enforce
+      removal_guard:
+        max: 5
+        max_percent: 100
