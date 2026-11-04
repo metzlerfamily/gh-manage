@@ -7,9 +7,40 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  # `test` is a required check, so it must report on every PR. Instead of
+  # paths-ignore (which leaves it pending forever), it is skipped when only
+  # config/ changed; a skipped job satisfies a required check. Config itself
+  # is validated by the `policy` check.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
+          elif [[ "$BEFORE" =~ ^0+$ ]]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+          else
+            files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq '.files[].filename')
+          fi
+          if [ -z "$files" ] || echo "$files" | grep -qv '^config/'; then code=true; else code=false; fi
+          echo "$files" | sed 's/^/  /'
+          echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
