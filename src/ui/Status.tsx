@@ -11,7 +11,7 @@ export function Status({ data }: { data: AppData }) {
   async function runNow(dryRun: boolean) {
     try {
       await gh.json("POST", `/repos/${CONFIG_REPO}/actions/workflows/reconcile.yml/dispatches`, {
-        body: { ref: "main", inputs: { dry_run: String(dryRun) } },
+        body: { ref: "main", inputs: { dry_run: String(dryRun), only: "", override_guard: "false" } },
       });
       setMessage(`Started a ${dryRun ? "plan" : "reconcile"} run. Results appear here when it finishes.`);
     } catch (e) {
