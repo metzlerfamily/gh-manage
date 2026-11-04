@@ -1,0 +1,12 @@
+# Managed by gh-manage. Edit through pull requests.
+name: ghm-sample-app
+org: metzlerfamily
+requester: dmetzler
+purpose: Sample Github app
+use_case: backstage usage
+permissions:
+  repository:
+    contents:
+      access: read
+      justification: needs to
+events: []
