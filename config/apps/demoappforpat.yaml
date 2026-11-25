@@ -1,0 +1,20 @@
+# Managed by gh-manage. Edit through pull requests.
+name: DemoAppForPat
+org: metzlerfamily
+requester: dmetzler
+purpose: asdfasdf
+use_case: here is my use case
+permissions:
+  repository:
+    contents:
+      access: read
+      justification: because
+events: []
+enablement:
+  topic: demoapp-enabled
+  orgs:
+    - name: metzlerfamily
+      mode: dry-run
+      removal_guard:
+        max: 10
+        max_percent: 20
